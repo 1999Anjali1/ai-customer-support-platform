@@ -7,6 +7,8 @@ import { Browser, Page, expect, test } from '@playwright/test';
  */
 
 const shots = 'screenshots';
+/** True when the workflow has a real LLM key (GROQ_API_KEY secret); otherwise the AI runs in demo mode. */
+const aiEnabled = process.env['AI_ENABLED'] === 'true';
 
 async function login(browser: Browser, name: string): Promise<Page> {
   const context = await browser.newContext();
@@ -23,11 +25,12 @@ test('customer → AI → human agent hand-over in real time', async ({ browser 
   await expect(customer.locator('.msg').first()).toContainText('SmartSupport');
   await expect(customer.locator('.conn.connected')).toBeVisible();
 
-  await customer.getByPlaceholder(/Type your message/).fill('What is my bill this month?');
+  const question = "I'm travelling to Saudi Arabia next week. Can you turn on roaming for me? Which pack should I take?";
+  await customer.getByPlaceholder(/Type your message/).fill(question);
   await customer.getByRole('button', { name: 'Send' }).click();
 
   // the customer's message, then an AI reply (real model if GROQ_API_KEY is set, otherwise demo-mode text)
-  await expect(customer.locator('.msg.mine')).toContainText('What is my bill this month?');
+  await expect(customer.locator('.msg.mine')).toContainText('Saudi Arabia');
   await expect(customer.locator('.msg:not(.mine) .text')).toHaveCount(2, { timeout: 60_000 });
   await expect(customer.locator('.bubble.thinking')).toHaveCount(0, { timeout: 60_000 });
   await expect(customer.locator('.cursor')).toHaveCount(0, { timeout: 60_000 });
@@ -44,6 +47,13 @@ test('customer → AI → human agent hand-over in real time', async ({ browser 
   await item.click();
   await agent.getByRole('button', { name: 'Accept chat' }).click();
   await expect(agent.locator('.chat-header')).toContainText('In progress');
+
+  if (aiEnabled) {
+    await agent.getByRole('button', { name: 'Generate' }).click();
+    await expect(agent.locator('.copilot .md')).toContainText(/Issue/i, { timeout: 60_000 });
+    await agent.getByRole('button', { name: 'Suggest' }).click();
+    await expect(agent.locator('.suggestion')).toBeVisible({ timeout: 60_000 });
+  }
 
   await agent.getByPlaceholder(/Write a reply/).fill('Hi Rahul, Sara here from the support team. Let me check that for you.');
   await agent.getByRole('button', { name: 'Send' }).click();

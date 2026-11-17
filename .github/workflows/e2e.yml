@@ -4,6 +4,14 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      update_screenshots:
+        description: Commit the screenshots to docs/screenshots
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
 
 jobs:
   e2e:
@@ -12,6 +20,7 @@ jobs:
     env:
       GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}   # optional – without it the AI runs in demo mode
       EMBEDDINGS_ENABLED: "false"                 # skip the Ollama download in CI
+      AI_ENABLED: ${{ secrets.GROQ_API_KEY != '' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -48,6 +57,17 @@ jobs:
           path: |
             e2e/screenshots
             e2e/playwright-report
+
+      - name: Commit screenshots
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.update_screenshots }}
+        run: |
+          mkdir -p docs/screenshots
+          cp e2e/screenshots/*.png docs/screenshots/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add docs/screenshots
+          git diff --cached --quiet || git commit -m "docs: update screenshots from E2E run"
+          git push
 
       - name: Docker logs
         if: failure()
