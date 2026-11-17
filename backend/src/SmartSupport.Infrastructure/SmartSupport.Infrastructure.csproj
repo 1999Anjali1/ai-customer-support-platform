@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Infrastructure layer: PostgreSQL + pgvector, LLM providers, background workers, seed data. -->
+  <ItemGroup>
+    <ProjectReference Include="..\SmartSupport.Application\SmartSupport.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="SmartSupport.UnitTests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
+    <PackageReference Include="Pgvector.EntityFrameworkCore" Version="0.3.0" />
+    <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="10.*-*" />
+  </ItemGroup>
+
+</Project>

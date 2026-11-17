@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  backend:
+    name: Backend – build & unit tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet restore SmartSupport.slnx
+      - run: dotnet build SmartSupport.slnx -c Release --no-restore
+      - run: dotnet test SmartSupport.slnx -c Release --no-build --logger "console;verbosity=normal"
+
+  api-smoke-test:
+    name: API smoke test (PostgreSQL + pgvector)
+    runs-on: ubuntu-latest
+    needs: backend
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: smartsupport
+          POSTGRES_PASSWORD: smartsupport
+          POSTGRES_DB: smartsupport
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U smartsupport"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      ConnectionStrings__Default: Host=localhost;Port=5432;Database=smartsupport;Username=smartsupport;Password=smartsupport
+      Jwt__Key: ci-only-key-0123456789-abcdefghijklmnopqrstuvwxyz
+      ASPNETCORE_URLS: http://localhost:5080
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Enable pgvector
+        run: PGPASSWORD=smartsupport psql -h localhost -U smartsupport -d smartsupport -c "CREATE EXTENSION IF NOT EXISTS vector;"
+      - name: Start API
+        working-directory: backend
+        run: |
+          dotnet run --project src/SmartSupport.Api -c Release > ../api.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -sf http://localhost:5080/health && break
+            sleep 2
+          done
+          curl -sf http://localhost:5080/health
+      - name: Exercise the API
+        run: |
+          set -e
+          TOKEN=$(curl -sf -X POST http://localhost:5080/api/auth/login -H 'Content-Type: application/json' \
+            -d '{"email":"admin@demo.qa","password":"Demo@123"}' | jq -r .token)
+          test -n "$TOKEN" && test "$TOKEN" != "null"
+          AUTH="Authorization: Bearer $TOKEN"
+          sleep 5   # give the indexing worker time to chunk the seeded articles
+          echo "--- knowledge base"; curl -sf -H "$AUTH" http://localhost:5080/api/knowledge | jq -c '[.[] | {title, status, chunkCount}]'
+          echo "--- search"; curl -sf -H "$AUTH" "http://localhost:5080/api/knowledge/search?q=roaming%20saudi" | jq -c '[.[] | {articleTitle, matchedBy}]'
+          test "$(curl -sf -H "$AUTH" "http://localhost:5080/api/knowledge/search?q=roaming%20saudi" | jq length)" -gt 0
+          echo "--- analytics"; curl -sf -H "$AUTH" http://localhost:5080/api/analytics/overview | jq -c '{totalConversations, resolvedByAi, escalated, aiResolutionRate}'
+          echo "--- tickets"; curl -sf -H "$AUTH" http://localhost:5080/api/tickets | jq length
+          CTOKEN=$(curl -sf -X POST http://localhost:5080/api/auth/login -H 'Content-Type: application/json' \
+            -d '{"email":"rahul@demo.qa","password":"Demo@123"}' | jq -r .token)
+          echo "--- customer account"; curl -sf -H "Authorization: Bearer $CTOKEN" http://localhost:5080/api/account/me | jq -c '{accountNumber, outstandingQar, plan: .plan.code}'
+          echo "--- start chat"; curl -sf -X POST -H "Authorization: Bearer $CTOKEN" -H 'Content-Type: application/json' \
+            -d '{"language":"en"}' http://localhost:5080/api/conversations/start | jq -c '{status: .conversation.status, messages: (.messages | length)}'
+          echo "--- agent queue"; curl -sf -H "$AUTH" http://localhost:5080/api/agent/queue | jq length
+          echo "--- unauthorised access is rejected"
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:5080/api/analytics/overview)" = "401"
+      - name: API log
+        if: always()
+        run: cat api.log
+
+  docker:
+    name: Docker images build
+    runs-on: ubuntu-latest
+    needs: [backend]
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t smartsupport-api ./backend
+      - if: ${{ hashFiles('frontend/Dockerfile') != '' }}
+        run: docker build -t smartsupport-web ./frontend

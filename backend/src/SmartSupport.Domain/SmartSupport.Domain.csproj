@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Domain layer: entities and business rules. No dependency on other layers. -->
+  <ItemGroup>
+    <PackageReference Include="Pgvector" Version="0.*" />
+  </ItemGroup>
+
+</Project>
