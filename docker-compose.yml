@@ -1,5 +1,8 @@
 # One command to run everything:  docker compose up --build
-# Then open http://localhost:4200  (API docs: http://localhost:4200/scalar)
+# Then open http://localhost:4200  (API docs: http://localhost:5080/scalar)
+#
+# AI: put OPENAI_API_KEY in a .env file (see .env.example). The same key is used for
+# the chat model and for embeddings. No key = demo mode (everything works except AI answers).
 
 services:
   db:
@@ -19,41 +22,25 @@ services:
       timeout: 5s
       retries: 10
 
-  # Local embedding model for semantic search (free, runs on CPU)
-  ollama:
-    image: ollama/ollama:latest
-    volumes:
-      - ollama:/root/.ollama
-    ports:
-      - "11434:11434"
-
-  # Downloads the embedding model once, then exits
-  ollama-pull:
-    image: ollama/ollama:latest
-    depends_on:
-      - ollama
-    environment:
-      OLLAMA_HOST: ollama:11434
-    entrypoint: ["/bin/sh", "-c", "sleep 3 && ollama pull nomic-embed-text"]
-    restart: "no"
-
   api:
     build: ./backend
     depends_on:
       db:
         condition: service_healthy
-      ollama-pull:
-        condition: service_completed_successfully
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ConnectionStrings__Default: Host=db;Port=5432;Database=smartsupport;Username=smartsupport;Password=smartsupport
       Jwt__Key: ${JWT_KEY:-change-this-demo-key-0123456789-abcdefghijklmnop}
-      AI__Chat__Endpoint: ${AI_CHAT_ENDPOINT:-https://api.groq.com/openai/v1}
-      AI__Chat__ApiKey: ${GROQ_API_KEY:-}
-      AI__Chat__Model: ${AI_CHAT_MODEL:-llama-3.3-70b-versatile}
+      # Chat model (any OpenAI-compatible endpoint)
+      AI__Chat__Endpoint: ${AI_CHAT_ENDPOINT:-https://api.openai.com/v1}
+      AI__Chat__ApiKey: ${OPENAI_API_KEY:-}
+      AI__Chat__Model: ${AI_CHAT_MODEL:-gpt-4.1-mini}
+      # Embeddings for semantic search (reuses the chat key when the endpoint is the same)
       AI__Embeddings__Enabled: ${EMBEDDINGS_ENABLED:-true}
-      AI__Embeddings__Endpoint: http://ollama:11434/v1
-      AI__Embeddings__Model: nomic-embed-text
+      AI__Embeddings__Endpoint: ${EMBEDDINGS_ENDPOINT:-https://api.openai.com/v1}
+      AI__Embeddings__ApiKey: ${EMBEDDINGS_API_KEY:-}
+      AI__Embeddings__Model: ${EMBEDDINGS_MODEL:-text-embedding-3-small}
+      AI__Embeddings__Dimensions: ${EMBEDDINGS_DIMENSIONS:-768}
       Cors__Origins__0: http://localhost:4200
     ports:
       - "5080:8080"
@@ -64,6 +51,28 @@ services:
       - api
     ports:
       - "4200:80"
+
+  # ---- Optional: free local embeddings instead of OpenAI ----
+  #   docker compose --profile local-embeddings up --build
+  #   and in .env: EMBEDDINGS_ENDPOINT=http://ollama:11434/v1  EMBEDDINGS_MODEL=nomic-embed-text
+  #                EMBEDDINGS_API_KEY=ollama  EMBEDDINGS_DIMENSIONS=0
+  ollama:
+    image: ollama/ollama:latest
+    profiles: [local-embeddings]
+    volumes:
+      - ollama:/root/.ollama
+    ports:
+      - "11434:11434"
+
+  ollama-pull:
+    image: ollama/ollama:latest
+    profiles: [local-embeddings]
+    depends_on:
+      - ollama
+    environment:
+      OLLAMA_HOST: ollama:11434
+    entrypoint: ["/bin/sh", "-c", "sleep 3 && ollama pull nomic-embed-text"]
+    restart: "no"
 
 volumes:
   pgdata:

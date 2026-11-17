@@ -54,8 +54,8 @@ flowchart LR
         W2[[Insights worker]]
     end
 
-    AG -- IChatClient + function calling --> LLM[(Groq / OpenAI / Azure OpenAI)]
-    W1 -- embeddings --> EMB[(Ollama nomic-embed-text)]
+    AG -- IChatClient + function calling --> LLM[(OpenAI gpt-4.1-mini<br/>or Azure OpenAI / any compatible)]
+    W1 -- embeddings --> EMB[(OpenAI text-embedding-3-small)]
     API & AG & KS & W1 & W2 --> DB[(PostgreSQL 17 + pgvector)]
 ```
 
@@ -81,12 +81,12 @@ More detail is in **[docs/HOW-THE-BACKEND-WORKS.md](docs/HOW-THE-BACKEND-WORKS.m
 
 ## 🚀 Run it
 
-**Requirements:** Docker Desktop. For real AI answers you also need a free [Groq API key](https://console.groq.com/keys).
+**Requirements:** Docker Desktop. For real AI answers you also need an [OpenAI API key](https://platform.openai.com/api-keys). The same key is used for the chat model and for embeddings.
 
 ```bash
 git clone https://github.com/1999Anjali1/ai-customer-support-platform.git
 cd ai-customer-support-platform
-cp .env.example .env          # paste your GROQ_API_KEY
+cp .env.example .env          # paste your OPENAI_API_KEY
 docker compose up --build
 ```
 
@@ -100,19 +100,20 @@ Open **http://localhost:4200**. API docs are at **http://localhost:5080/scalar**
 | `admin@demo.qa` | Admin | Analytics, add or upload knowledge articles, test retrieval |
 
 > Without an API key the app still runs in **demo mode**: everything works except the AI answers.
-> Any OpenAI-compatible provider works (OpenAI, Azure OpenAI, Ollama). Set `AI_CHAT_ENDPOINT` and `AI_CHAT_MODEL`.
+> Any OpenAI-compatible provider works (Azure OpenAI, Groq, Ollama). Set `AI_CHAT_ENDPOINT` and `AI_CHAT_MODEL`.
+> For free local embeddings, run with `--profile local-embeddings` (Ollama). See `docker-compose.yml`.
 
 <details>
 <summary><b>Run without Docker (for development)</b></summary>
 
 ```bash
 # 1. PostgreSQL with pgvector
-docker compose up -d db ollama ollama-pull
+docker compose up -d db
 
 # 2. API  → http://localhost:5080
 cd backend
 dotnet user-secrets init --project src/SmartSupport.Api
-dotnet user-secrets set "AI:Chat:ApiKey" "<your-groq-key>" --project src/SmartSupport.Api
+dotnet user-secrets set "AI:Chat:ApiKey" "<your-openai-key>" --project src/SmartSupport.Api
 dotnet run --project src/SmartSupport.Api
 
 # 3. Angular → http://localhost:4200 (proxies /api and /hubs to the API)
@@ -144,7 +145,7 @@ GitHub Actions runs all of these on every push. It also starts the API against a
 
 **Backend:** C# 14, ASP.NET Core 10 Web API, EF Core 10, Npgsql, pgvector, SignalR, Microsoft.Extensions.AI, OpenAI .NET SDK, JWT Bearer, OpenAPI + Scalar, BackgroundService + Channels, rate limiting, xUnit<br/>
 **Frontend:** Angular 22 (standalone components, signals, new control flow, lazy routes, functional guards/interceptors), TypeScript, SCSS, @microsoft/signalr, Chart.js, marked, Vitest<br/>
-**AI:** Llama 3.3 70B on Groq (swappable), nomic-embed-text embeddings on Ollama, tool calling, RAG, structured classification<br/>
+**AI:** OpenAI gpt-4.1-mini (swappable for Azure OpenAI or any compatible provider), text-embedding-3-small embeddings (768-d), tool calling, RAG, structured classification<br/>
 **DevOps:** Docker multi-stage builds, Docker Compose, Nginx reverse proxy (WebSockets), GitHub Actions CI, Playwright E2E
 
 ## 🗺️ Possible next steps

@@ -7,7 +7,7 @@ import { Browser, Page, expect, test } from '@playwright/test';
  */
 
 const shots = 'screenshots';
-/** True when the workflow has a real LLM key (GROQ_API_KEY secret); otherwise the AI runs in demo mode. */
+/** True when the workflow has a real LLM key (OPENAI_API_KEY secret); otherwise the AI runs in demo mode. */
 const aiEnabled = process.env['AI_ENABLED'] === 'true';
 
 async function login(browser: Browser, name: string): Promise<Page> {
@@ -29,7 +29,7 @@ test('customer → AI → human agent hand-over in real time', async ({ browser 
   await customer.getByPlaceholder(/Type your message/).fill(question);
   await customer.getByRole('button', { name: 'Send' }).click();
 
-  // the customer's message, then an AI reply (real model if GROQ_API_KEY is set, otherwise demo-mode text)
+  // the customer's message, then an AI reply (real model if OPENAI_API_KEY is set, otherwise demo-mode text)
   await expect(customer.locator('.msg.mine')).toContainText('Saudi Arabia');
   await expect(customer.locator('.msg:not(.mine) .text')).toHaveCount(2, { timeout: 60_000 });
   await expect(customer.locator('.bubble.thinking')).toHaveCount(0, { timeout: 60_000 });

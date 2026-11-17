@@ -18,9 +18,8 @@ jobs:
     name: Playwright against the full Docker stack
     runs-on: ubuntu-latest
     env:
-      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}   # optional – without it the AI runs in demo mode
-      EMBEDDINGS_ENABLED: "false"                 # skip the Ollama download in CI
-      AI_ENABLED: ${{ secrets.GROQ_API_KEY != '' }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}   # optional – without it the AI runs in demo mode
+      AI_ENABLED: ${{ secrets.OPENAI_API_KEY != '' }}
     steps:
       - uses: actions/checkout@v4
 
