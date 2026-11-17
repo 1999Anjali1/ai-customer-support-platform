@@ -55,6 +55,7 @@ public sealed class ConversationInsightsWorker(
             .Where(c => c.Status == ConversationStatus.Bot
                         && c.LastMessageAt < cutoff
                         && c.Messages.Any(m => m.Sender == MessageSender.Customer))
+            .OrderBy(c => c.LastMessageAt)
             .Take(50)
             .ToListAsync(ct);
 

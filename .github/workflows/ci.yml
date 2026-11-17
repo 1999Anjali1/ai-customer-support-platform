@@ -41,6 +41,7 @@ jobs:
       ConnectionStrings__Default: Host=localhost;Port=5432;Database=smartsupport;Username=smartsupport;Password=smartsupport
       Jwt__Key: ci-only-key-0123456789-abcdefghijklmnopqrstuvwxyz
       ASPNETCORE_URLS: http://localhost:5080
+      AI__Embeddings__Enabled: "false"   # no embedding model in CI – keyword search only
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -82,12 +83,28 @@ jobs:
         if: always()
         run: cat api.log
 
+  frontend:
+    name: Frontend – build & tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - run: npm test -- --watch=false
+
   docker:
     name: Docker images build
     runs-on: ubuntu-latest
-    needs: [backend]
+    needs: [backend, frontend]
     steps:
       - uses: actions/checkout@v4
       - run: docker build -t smartsupport-api ./backend
-      - if: ${{ hashFiles('frontend/Dockerfile') != '' }}
-        run: docker build -t smartsupport-web ./frontend
+      - run: docker build -t smartsupport-web ./frontend
