@@ -11,7 +11,8 @@ namespace SmartSupport.Infrastructure.Ai;
 
 /// <summary>
 /// "AI" section of appsettings / environment variables.
-/// Defaults to OpenAI. Any OpenAI-compatible provider also works: Azure OpenAI, Groq, Ollama, LM Studio...
+/// Defaults to Google Gemini (free tier) through its OpenAI-compatible endpoint.
+/// Any OpenAI-compatible provider also works: OpenAI, Azure OpenAI, Groq, Ollama, LM Studio...
 /// One API key is enough: if no separate embeddings key is set and both use the same endpoint, the chat key is reused.
 /// </summary>
 public sealed class AiOptions
@@ -24,9 +25,9 @@ public sealed class AiOptions
 
 public sealed class ChatModelOptions
 {
-    public string Endpoint { get; set; } = "https://api.openai.com/v1";
+    public string Endpoint { get; set; } = "https://generativelanguage.googleapis.com/v1beta/openai/";
     public string? ApiKey { get; set; }
-    public string Model { get; set; } = "gpt-4.1-mini";
+    public string Model { get; set; } = "gemini-2.5-flash";
 
     public bool IsConfigured => !string.IsNullOrWhiteSpace(ApiKey);
 }
@@ -35,12 +36,12 @@ public sealed class EmbeddingModelOptions
 {
     /// <summary>When false, knowledge search uses PostgreSQL full-text search only.</summary>
     public bool Enabled { get; set; } = true;
-    public string Endpoint { get; set; } = "https://api.openai.com/v1";
+    public string Endpoint { get; set; } = "https://generativelanguage.googleapis.com/v1beta/openai/";
     public string? ApiKey { get; set; }
-    public string Model { get; set; } = "text-embedding-3-small";
+    public string Model { get; set; } = "gemini-embedding-001";
 
     /// <summary>
-    /// Vector size requested from the provider. OpenAI text-embedding-3-* can shorten vectors to 768 to match
+    /// Vector size requested from the provider. gemini-embedding-001 and OpenAI text-embedding-3-* can return 768 to match
     /// the database column. Set to 0 for models that don't support it (e.g. Ollama nomic-embed-text is already 768).
     /// </summary>
     public int? Dimensions { get; set; } = 768;
@@ -134,7 +135,7 @@ public sealed class NullTextEmbedder : ITextEmbedder
 public sealed class NotConfiguredChatClient : IChatClient
 {
     private const string Text =
-        "⚙️ Demo mode: the AI model is not configured yet. Add your OpenAI API key as OPENAI_API_KEY in the .env file " +
+        "⚙️ Demo mode: the AI model is not configured yet. Add a free Gemini API key as GEMINI_API_KEY in the .env file " +
         "(or AI__Chat__ApiKey) and restart the API.";
 
     public Task<ChatResponse> GetResponseAsync(

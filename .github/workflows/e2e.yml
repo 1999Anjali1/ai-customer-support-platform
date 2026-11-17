@@ -18,8 +18,8 @@ jobs:
     name: Playwright against the full Docker stack
     runs-on: ubuntu-latest
     env:
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}   # optional – without it the AI runs in demo mode
-      AI_ENABLED: ${{ secrets.OPENAI_API_KEY != '' }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}   # optional – without it the AI runs in demo mode
+      AI_ENABLED: ${{ secrets.GEMINI_API_KEY != '' }}
     steps:
       - uses: actions/checkout@v4
 

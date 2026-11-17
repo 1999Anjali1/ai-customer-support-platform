@@ -1,7 +1,7 @@
 # One command to run everything:  docker compose up --build
 # Then open http://localhost:4200  (API docs: http://localhost:5080/scalar)
 #
-# AI: put OPENAI_API_KEY in a .env file (see .env.example). The same key is used for
+# AI: put a free GEMINI_API_KEY in a .env file (see .env.example). The same key is used for
 # the chat model and for embeddings. No key = demo mode (everything works except AI answers).
 
 services:
@@ -32,14 +32,14 @@ services:
       ConnectionStrings__Default: Host=db;Port=5432;Database=smartsupport;Username=smartsupport;Password=smartsupport
       Jwt__Key: ${JWT_KEY:-change-this-demo-key-0123456789-abcdefghijklmnop}
       # Chat model (any OpenAI-compatible endpoint)
-      AI__Chat__Endpoint: ${AI_CHAT_ENDPOINT:-https://api.openai.com/v1}
-      AI__Chat__ApiKey: ${OPENAI_API_KEY:-}
-      AI__Chat__Model: ${AI_CHAT_MODEL:-gpt-4.1-mini}
+      AI__Chat__Endpoint: ${AI_CHAT_ENDPOINT:-https://generativelanguage.googleapis.com/v1beta/openai/}
+      AI__Chat__ApiKey: ${GEMINI_API_KEY:-}
+      AI__Chat__Model: ${AI_CHAT_MODEL:-gemini-2.5-flash}
       # Embeddings for semantic search (reuses the chat key when the endpoint is the same)
       AI__Embeddings__Enabled: ${EMBEDDINGS_ENABLED:-true}
-      AI__Embeddings__Endpoint: ${EMBEDDINGS_ENDPOINT:-https://api.openai.com/v1}
+      AI__Embeddings__Endpoint: ${EMBEDDINGS_ENDPOINT:-https://generativelanguage.googleapis.com/v1beta/openai/}
       AI__Embeddings__ApiKey: ${EMBEDDINGS_API_KEY:-}
-      AI__Embeddings__Model: ${EMBEDDINGS_MODEL:-text-embedding-3-small}
+      AI__Embeddings__Model: ${EMBEDDINGS_MODEL:-gemini-embedding-001}
       AI__Embeddings__Dimensions: ${EMBEDDINGS_DIMENSIONS:-768}
       Cors__Origins__0: http://localhost:4200
     ports:
@@ -52,7 +52,7 @@ services:
     ports:
       - "4200:80"
 
-  # ---- Optional: free local embeddings instead of OpenAI ----
+  # ---- Optional: local embeddings with Ollama instead of Gemini ----
   #   docker compose --profile local-embeddings up --build
   #   and in .env: EMBEDDINGS_ENDPOINT=http://ollama:11434/v1  EMBEDDINGS_MODEL=nomic-embed-text
   #                EMBEDDINGS_API_KEY=ollama  EMBEDDINGS_DIMENSIONS=0

@@ -21,7 +21,7 @@ An arrow means "references". **Domain** has no dependencies at all.
 
 **Why split it?** The rules don't depend on the database or the AI provider, so they can be unit-tested without them.
 For example, `CustomerAccount.ChangePlan()` throws if a bill is overdue, and this is tested in `DomainTests.cs`.
-To switch from OpenAI to Azure OpenAI you only change configuration.
+To switch from Gemini to OpenAI or Azure OpenAI you only change configuration.
 
 ## 2. Dependency Injection (DI)
 
@@ -57,7 +57,7 @@ This is the same idea as Angular's `inject()` / `providedIn: 'root'`.
 
 ```csharp
 // Infrastructure/Ai/AiSetup.cs
-IChatClient inner = new OpenAIClient(key, new() { Endpoint = endpoint }).GetChatClient("gpt-4.1-mini").AsIChatClient();
+IChatClient inner = new OpenAIClient(key, new() { Endpoint = endpoint }).GetChatClient("gemini-2.5-flash").AsIChatClient();
 services.AddChatClient(inner).UseFunctionInvocation();   // ← middleware that runs the tool-calling loop
 ```
 
@@ -79,7 +79,7 @@ It repeats this until the model writes a final answer.
 ## 5. RAG: how the AI knows the policies
 
 1. An admin saves an article. `KnowledgeService` stores it with status **Pending** and pushes its id onto a `Channel` (an in-memory queue).
-2. `KnowledgeIndexingWorker` (a `BackgroundService`) reads the queue. `TextChunker` splits the article into ~800-character overlapping chunks, OpenAI `text-embedding-3-small` turns each chunk into a 768-number vector (OpenAI can shorten its vectors to a requested size), and the chunks are saved to `KnowledgeChunks` (a `vector(768)` column with an HNSW index).
+2. `KnowledgeIndexingWorker` (a `BackgroundService`) reads the queue. `TextChunker` splits the article into ~800-character overlapping chunks, `gemini-embedding-001` turns each chunk into a 768-number vector (the model can return a requested vector size), and the chunks are saved to `KnowledgeChunks` (a `vector(768)` column with an HNSW index).
 3. At question time `KnowledgeSearch` runs two searches:
    - **vector**: `ORDER BY embedding <=> query_vector`, which finds similar meaning
    - **keyword**: PostgreSQL full-text search (`tsvector @@ tsquery`), which finds exact words like "eSIM"
