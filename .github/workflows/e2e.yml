@@ -29,7 +29,7 @@ jobs:
           curl -s --max-time 30 https://generativelanguage.googleapis.com/v1beta/openai/models -H "Authorization: Bearer $GEMINI_API_KEY" \
             | jq -r '.data[]?.id // .error' | sort | tr '\n' ' '
           echo
-          for m in gemini-2.5-flash gemini-2.5-flash-lite gemini-3.5-flash gemini-3.1-flash-lite gemini-flash-latest; do
+          for m in gemini-3.1-flash-lite gemini-3.5-flash; do
             code=$(curl -s --max-time 40 -o /tmp/r.json -w '%{http_code}' https://generativelanguage.googleapis.com/v1beta/openai/chat/completions \
               -H "Authorization: Bearer $GEMINI_API_KEY" -H 'Content-Type: application/json' \
               -d "{\"model\":\"$m\",\"messages\":[{\"role\":\"user\",\"content\":\"Say OK\"}]}")

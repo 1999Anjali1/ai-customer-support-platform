@@ -54,7 +54,7 @@ flowchart LR
         W2[[Insights worker]]
     end
 
-    AG -- IChatClient + function calling --> LLM[(Google Gemini 2.5 Flash<br/>or OpenAI / Azure OpenAI)]
+    AG -- IChatClient + function calling --> LLM[(Google Gemini 3.1 Flash-Lite<br/>or OpenAI / Azure OpenAI)]
     W1 -- embeddings --> EMB[(gemini-embedding-001)]
     API & AG & KS & W1 & W2 --> DB[(PostgreSQL 17 + pgvector)]
 ```
@@ -145,7 +145,7 @@ GitHub Actions runs all of these on every push. It also starts the API against a
 
 **Backend:** C# 14, ASP.NET Core 10 Web API, EF Core 10, Npgsql, pgvector, SignalR, Microsoft.Extensions.AI, OpenAI .NET SDK, JWT Bearer, OpenAPI + Scalar, BackgroundService + Channels, rate limiting, xUnit<br/>
 **Frontend:** Angular 22 (standalone components, signals, new control flow, lazy routes, functional guards/interceptors), TypeScript, SCSS, @microsoft/signalr, Chart.js, marked, Vitest<br/>
-**AI:** Google Gemini 2.5 Flash via the OpenAI-compatible API (swappable for OpenAI / Azure OpenAI), gemini-embedding-001 embeddings (768-d), tool calling, RAG, structured classification<br/>
+**AI:** Google Gemini 3.1 Flash-Lite via the OpenAI-compatible API (swappable for OpenAI / Azure OpenAI), gemini-embedding-001 embeddings (768-d), tool calling, RAG, structured classification<br/>
 **DevOps:** Docker multi-stage builds, Docker Compose, Nginx reverse proxy (WebSockets), GitHub Actions CI, Playwright E2E
 
 ## 🗺️ Possible next steps

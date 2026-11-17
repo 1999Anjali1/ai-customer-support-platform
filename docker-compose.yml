@@ -34,7 +34,7 @@ services:
       # Chat model (any OpenAI-compatible endpoint)
       AI__Chat__Endpoint: ${AI_CHAT_ENDPOINT:-https://generativelanguage.googleapis.com/v1beta/openai/}
       AI__Chat__ApiKey: ${GEMINI_API_KEY:-}
-      AI__Chat__Model: ${AI_CHAT_MODEL:-gemini-2.5-flash}
+      AI__Chat__Model: ${AI_CHAT_MODEL:-gemini-3.1-flash-lite}
       # Embeddings for semantic search (reuses the chat key when the endpoint is the same)
       AI__Embeddings__Enabled: ${EMBEDDINGS_ENABLED:-true}
       AI__Embeddings__Endpoint: ${EMBEDDINGS_ENDPOINT:-https://generativelanguage.googleapis.com/v1beta/openai/}

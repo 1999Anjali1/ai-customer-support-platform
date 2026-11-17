@@ -27,7 +27,7 @@ public sealed class ChatModelOptions
 {
     public string Endpoint { get; set; } = "https://generativelanguage.googleapis.com/v1beta/openai/";
     public string? ApiKey { get; set; }
-    public string Model { get; set; } = "gemini-2.5-flash";
+    public string Model { get; set; } = "gemini-3.1-flash-lite";
 
     public bool IsConfigured => !string.IsNullOrWhiteSpace(ApiKey);
 }

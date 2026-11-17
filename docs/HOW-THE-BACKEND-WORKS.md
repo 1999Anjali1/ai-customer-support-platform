@@ -57,7 +57,7 @@ This is the same idea as Angular's `inject()` / `providedIn: 'root'`.
 
 ```csharp
 // Infrastructure/Ai/AiSetup.cs
-IChatClient inner = new OpenAIClient(key, new() { Endpoint = endpoint }).GetChatClient("gemini-2.5-flash").AsIChatClient();
+IChatClient inner = new OpenAIClient(key, new() { Endpoint = endpoint }).GetChatClient("gemini-3.1-flash-lite").AsIChatClient();
 services.AddChatClient(inner).UseFunctionInvocation();   // ← middleware that runs the tool-calling loop
 ```
 
