@@ -23,19 +23,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Models available to this AI key
-        if: ${{ env.AI_ENABLED == 'true' }}
-        run: |
-          curl -s --max-time 30 https://generativelanguage.googleapis.com/v1beta/openai/models -H "Authorization: Bearer $GEMINI_API_KEY" \
-            | jq -r '.data[]?.id // .error' | sort | tr '\n' ' '
-          echo
-          for m in gemini-3.1-flash-lite gemini-3.5-flash; do
-            code=$(curl -s --max-time 40 -o /tmp/r.json -w '%{http_code}' https://generativelanguage.googleapis.com/v1beta/openai/chat/completions \
-              -H "Authorization: Bearer $GEMINI_API_KEY" -H 'Content-Type: application/json' \
-              -d "{\"model\":\"$m\",\"messages\":[{\"role\":\"user\",\"content\":\"Say OK\"}]}")
-            echo "$m -> $code $(jq -c '.error.message // .choices[0].message.content' /tmp/r.json | cut -c1-120)"
-          done
-
       - name: Start database
         run: docker compose up -d --wait db
 
