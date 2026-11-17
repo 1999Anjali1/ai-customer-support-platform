@@ -25,7 +25,7 @@ public sealed class InsightsService(IChatClient chatClient, IAppDbContext db, IK
         [
             new ChatMessage(ChatRole.System, Prompts.HandoverSummary),
             new ChatMessage(ChatRole.User, $"Escalation reason: {conversation.EscalationReason ?? "n/a"}\n\nTranscript:\n{transcript}")
-        ], new ChatOptions { Temperature = 0.2f }, ct);
+        ], new ChatOptions(), ct);
 
         conversation.Summary = response.Text.Trim();
         await db.SaveChangesAsync(ct);
@@ -53,7 +53,7 @@ public sealed class InsightsService(IChatClient chatClient, IAppDbContext db, IK
             new ChatMessage(ChatRole.System, Prompts.SuggestReply(conversation.Language)),
             new ChatMessage(ChatRole.User,
                 $"Knowledge base extracts:\n{context}\n\nConversation:\n{BuildTranscript(conversation.Messages)}")
-        ], new ChatOptions { Temperature = 0.4f }, ct);
+        ], new ChatOptions(), ct);
 
         return response.Text.Trim();
     }
@@ -66,7 +66,7 @@ public sealed class InsightsService(IChatClient chatClient, IAppDbContext db, IK
         [
             new ChatMessage(ChatRole.System, Prompts.Classify),
             new ChatMessage(ChatRole.User, transcript)
-        ], new ChatOptions { Temperature = 0f }, ct);
+        ], new ChatOptions(), ct);
 
         var (sentiment, topic) = InsightParser.Parse(response.Text);
         conversation.Sentiment = sentiment;

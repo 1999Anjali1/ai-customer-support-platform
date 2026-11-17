@@ -44,8 +44,8 @@ public sealed class SupportAgent(
         var options = new ChatOptions
         {
             Tools = tools.AsAITools(),
-            ToolMode = ChatToolMode.Auto,
-            Temperature = 0.3f
+            // No temperature: newer models (e.g. Gemini 3.5+, OpenAI reasoning models) reject sampling parameters.
+            ToolMode = ChatToolMode.Auto
         };
 
         var messageId = Guid.NewGuid();
