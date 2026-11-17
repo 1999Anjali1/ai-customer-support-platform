@@ -1,4 +1,5 @@
 using System.ClientModel;
+using System.ClientModel.Primitives;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
@@ -70,13 +71,17 @@ public static class AiSetup
             });
         }
 
-        IChatClient innerClient = ai.Chat.IsConfigured
-            ? new OpenAIClient(
-                    new ApiKeyCredential(ai.Chat.ApiKey!),
-                    new OpenAIClientOptions { Endpoint = new Uri(ai.Chat.Endpoint) })
+        IChatClient innerClient = new NotConfiguredChatClient();
+        if (ai.Chat.IsConfigured)
+        {
+            var chatOptions = new OpenAIClientOptions { Endpoint = new Uri(ai.Chat.Endpoint) };
+            if (GeminiThoughtSignaturePolicy.IsGeminiEndpoint(ai.Chat.Endpoint))
+                chatOptions.AddPolicy(new GeminiThoughtSignaturePolicy(), PipelinePosition.PerCall);
+
+            innerClient = new OpenAIClient(new ApiKeyCredential(ai.Chat.ApiKey!), chatOptions)
                 .GetChatClient(ai.Chat.Model)
-                .AsIChatClient()
-            : new NotConfiguredChatClient();
+                .AsIChatClient();
+        }
 
         services.AddChatClient(innerClient)
             .UseFunctionInvocation();

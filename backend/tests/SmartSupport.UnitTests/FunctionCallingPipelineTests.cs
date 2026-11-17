@@ -54,3 +54,38 @@ public class FunctionCallingPipelineTests
         Assert.Contains("QAR 100", text);
     }
 }
+
+public class GeminiThoughtSignaturePolicyTests
+{
+    [Fact]
+    public void Adds_signature_to_tool_calls_that_have_none()
+    {
+        var body = """
+            {"model":"gemini","messages":[
+              {"role":"user","content":"hi"},
+              {"role":"assistant","tool_calls":[{"id":"1","type":"function","function":{"name":"get_bill","arguments":"{}"}}]},
+              {"role":"tool","tool_call_id":"1","content":"QAR 100"}]}
+            """u8.ToArray();
+
+        var patched = SmartSupport.Infrastructure.Ai.GeminiThoughtSignaturePolicy.AddMissingSignatures(body);
+
+        Assert.NotNull(patched);
+        var json = System.Text.Json.Nodes.JsonNode.Parse(patched)!;
+        Assert.Equal("skip_thought_signature_validator",
+            json["messages"]![1]!["tool_calls"]![0]!["extra_content"]!["google"]!["thought_signature"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public void Leaves_requests_without_tool_calls_untouched()
+    {
+        var body = """{"model":"gemini","messages":[{"role":"user","content":"hi"}]}"""u8.ToArray();
+
+        Assert.Null(SmartSupport.Infrastructure.Ai.GeminiThoughtSignaturePolicy.AddMissingSignatures(body));
+    }
+
+    [Theory]
+    [InlineData("https://generativelanguage.googleapis.com/v1beta/openai/", true)]
+    [InlineData("https://api.openai.com/v1", false)]
+    public void Detects_gemini_endpoints(string endpoint, bool expected) =>
+        Assert.Equal(expected, SmartSupport.Infrastructure.Ai.GeminiThoughtSignaturePolicy.IsGeminiEndpoint(endpoint));
+}
