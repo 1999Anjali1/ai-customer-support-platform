@@ -68,6 +68,10 @@ jobs:
           git diff --cached --quiet || git commit -m "docs: update screenshots from E2E run"
           git push
 
+      - name: AI errors (if any)
+        if: always()
+        run: docker compose logs api --no-color | grep -A30 -E "AI reply failed|fail:" | head -120 || true
+
       - name: Docker logs
         if: failure()
         run: docker compose logs api web --tail 200
