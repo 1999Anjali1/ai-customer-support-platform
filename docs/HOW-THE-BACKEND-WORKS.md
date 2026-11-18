@@ -49,7 +49,8 @@ This is the same idea as Angular's `inject()` / `providedIn: 'root'`.
   (including the "last message" sub-query). This avoids the N+1 problem.
 - **Change tracking:** load an entity, call a domain method, then call `SaveChangesAsync()`. EF works out the UPDATE/INSERT statements.
 - Enums are stored as text, and Guid keys are generated in C#. Both are set up in `AppDbContext.ApplyConventions`.
-- On start-up `DbInitializer` creates the schema and seeds demo data.
+- **Migrations** live in `Infrastructure/Persistence/Migrations`. On start-up `DbInitializer` applies them (`MigrateAsync`) and seeds demo data.
+- To change the schema: edit an entity/configuration, then run `dotnet ef migrations add <Name>` (or the **Add EF Core migration** workflow in GitHub Actions).
 
 ## 4. The AI agent (Microsoft.Extensions.AI)
 
