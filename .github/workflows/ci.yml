@@ -3,6 +3,7 @@ name: CI
 on:
   push:
     branches: [main]
+    paths-ignore: ['**.md', 'docs/**', 'LICENSE']   # docs-only changes don't need a build (saves AI quota)
   pull_request:
   workflow_dispatch:
 

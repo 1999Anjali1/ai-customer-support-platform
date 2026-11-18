@@ -67,6 +67,7 @@ builder.Services.AddControllers()
 builder.Services.AddSignalR()
     .AddJsonProtocol(o => o.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddSingleton<ISupportNotifier, SignalRSupportNotifier>();
+builder.Services.AddSingleton<ChatRateLimiter>();
 
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();

@@ -157,4 +157,4 @@ GitHub Actions runs all of these on every push. It also starts the API against a
 
 ---
 
-<sub>Sahab Telecom is fictional. All customers, bills and policies are demo data.</sub>
+<sub>Sahab Telecom is fictional. All customers, bills and policies are demo data. Licensed under the [MIT License](LICENSE).</sub>

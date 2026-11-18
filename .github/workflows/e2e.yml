@@ -3,6 +3,7 @@ name: E2E
 on:
   push:
     branches: [main]
+    paths-ignore: ['**.md', 'docs/**', 'LICENSE']   # docs-only changes don't need a build (saves AI quota)
   workflow_dispatch:
     inputs:
       update_screenshots:

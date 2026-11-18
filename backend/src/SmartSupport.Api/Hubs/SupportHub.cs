@@ -1,3 +1,4 @@
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using SmartSupport.Api.Auth;
@@ -16,7 +17,7 @@ namespace SmartSupport.Api.Hubs;
 ///  • Agents/admins are also in the "agents" group to see the escalation queue update instantly.
 /// </summary>
 [Authorize]
-public sealed class SupportHub(ConversationService conversations, ILogger<SupportHub> logger) : Hub
+public sealed class SupportHub(ConversationService conversations, ChatRateLimiter rateLimiter, ILogger<SupportHub> logger) : Hub
 {
     public const string AgentsGroup = "agents";
     public static string ConversationGroup(Guid id) => $"conversation:{id}";
@@ -42,10 +43,16 @@ public sealed class SupportHub(ConversationService conversations, ILogger<Suppor
         Groups.RemoveFromGroupAsync(Context.ConnectionId, ConversationGroup(conversationId));
 
     [Authorize(Roles = "Customer")]
-    public Task SendCustomerMessage(Guid conversationId, string text) =>
-        RunAsync(() =>
+    public Task SendCustomerMessage(Guid conversationId, string text)
+    {
+        // Each AI reply costs model quota, so limit how fast one customer can send messages.
+        if (!rateLimiter.TryAcquire(Context.User!.GetUserId()))
+            throw new HubException("You're sending messages too quickly. Please wait a moment and try again.");
+
+        return RunAsync(() =>
             // CancellationToken.None: if the customer refreshes the page, the AI still finishes and saves its reply.
             conversations.HandleCustomerMessageAsync(conversationId, Context.User!.GetUserId(), Validate(text), CancellationToken.None));
+    }
 
     [Authorize(Roles = "Agent,Admin")]
     public Task SendAgentMessage(Guid conversationId, string text) =>
@@ -76,6 +83,26 @@ public sealed class SupportHub(ConversationService conversations, ILogger<Suppor
             throw new HubException("Something went wrong. Please try again.");
         }
     }
+}
+
+/// <summary>Per-customer limit for chat messages: 10 per minute (in memory, per server instance).</summary>
+public sealed class ChatRateLimiter : IDisposable
+{
+    private readonly PartitionedRateLimiter<Guid> _limiter = PartitionedRateLimiter.Create<Guid, Guid>(userId =>
+        RateLimitPartition.GetFixedWindowLimiter(userId, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 10,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0
+        }));
+
+    public bool TryAcquire(Guid userId)
+    {
+        using var lease = _limiter.AttemptAcquire(userId);
+        return lease.IsAcquired;
+    }
+
+    public void Dispose() => _limiter.Dispose();
 }
 
 /// <summary>Implements the application's notifier with SignalR (IHubContext can be used outside the hub).</summary>

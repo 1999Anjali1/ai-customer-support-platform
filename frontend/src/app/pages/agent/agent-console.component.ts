@@ -4,7 +4,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { debounceTime } from 'rxjs';
 import { ApiService, errorMessage } from '../../core/api.service';
-import { AuthService } from '../../core/auth.service';
 import { ConversationDetail, ConversationSummary, TOOL_LABELS } from '../../core/models';
 import { RealtimeService, hubError } from '../../core/realtime.service';
 import { MarkdownPipe } from '../../shared/markdown.pipe';
@@ -142,7 +141,6 @@ import { MarkdownPipe } from '../../shared/markdown.pipe';
 export class AgentConsoleComponent implements OnDestroy {
   private readonly api = inject(ApiService);
   private readonly realtime = inject(RealtimeService);
-  private readonly auth = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly scroller = viewChild<ElementRef<HTMLDivElement>>('scroller');
 
@@ -282,6 +280,4 @@ export class AgentConsoleComponent implements OnDestroy {
       this.error.set(errorMessage(err));
     }
   }
-
-  protected readonly currentUser = this.auth.user;
 }
