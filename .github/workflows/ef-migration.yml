@@ -24,6 +24,7 @@ jobs:
         with:
           dotnet-version: 10.0.x
       - run: dotnet tool install --global dotnet-ef --version "10.*"
+      - run: dotnet restore SmartSupport.slnx
       - name: Create migration
         env:
           ConnectionStrings__Default: Host=localhost;Database=design;Username=x;Password=x

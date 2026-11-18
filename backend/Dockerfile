@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Restore first (cached layer as long as project files don't change)
-COPY Directory.Build.props SmartSupport.slnx ./
+COPY Directory.Build.props SmartSupport.slnx global.json ./
 COPY src/SmartSupport.Domain/SmartSupport.Domain.csproj src/SmartSupport.Domain/
 COPY src/SmartSupport.Application/SmartSupport.Application.csproj src/SmartSupport.Application/
 COPY src/SmartSupport.Infrastructure/SmartSupport.Infrastructure.csproj src/SmartSupport.Infrastructure/
