@@ -3,8 +3,8 @@
 ASP.NET Core 10 · Angular 22 · PostgreSQL + pgvector · SignalR · Microsoft.Extensions.AI · Docker</p>
 
 <p align="center">
-  <a href="../../actions/workflows/ci.yml"><img src="../../actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="../../actions/workflows/e2e.yml"><img src="../../actions/workflows/e2e.yml/badge.svg" alt="E2E"></a>
+  <a href="https://github.com/1999Anjali1/ai-customer-support-platform/actions/workflows/ci.yml"><img src="https://github.com/1999Anjali1/ai-customer-support-platform/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/1999Anjali1/ai-customer-support-platform/actions/workflows/e2e.yml"><img src="https://github.com/1999Anjali1/ai-customer-support-platform/actions/workflows/e2e.yml/badge.svg" alt="E2E"></a>
 </p>
 
 SmartSupport AI is a customer support system for **Sahab Telecom**, a fictional mobile operator in Qatar.
@@ -30,7 +30,7 @@ The agent gets an AI-written handover summary and suggested replies.
 | 🌐 **Arabic & English** | Language is detected per message. The UI switches to **right-to-left** and the AI replies in the customer's language. |
 | 📊 **Analytics** | AI resolution rate, escalations, average time to hand-over, and **LLM-classified sentiment and topics** (background job). Shown in Chart.js dashboards. |
 | 🔐 **Security** | JWT auth with role-based access (Customer / Agent / Admin), a SignalR auth token, rate-limited login, and ProblemDetails errors. |
-| 🧪 **Tested** | 42 xUnit tests, Vitest unit tests, an API smoke test against real PostgreSQL in CI, and **Playwright E2E tests** that run the full customer → AI → agent journey in Docker. |
+| 🧪 **Tested** | 47 xUnit tests, Vitest unit tests, an API smoke test against real PostgreSQL in CI, and **Playwright E2E tests** that run the full customer → AI → agent journey in Docker. |
 
 ## 🏗️ Architecture
 

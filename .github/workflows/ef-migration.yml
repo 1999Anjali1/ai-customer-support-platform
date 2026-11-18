@@ -1,0 +1,42 @@
+name: Add EF Core migration
+
+# Run manually from the Actions tab: generates an EF Core migration and commits it.
+on:
+  workflow_dispatch:
+    inputs:
+      name:
+        description: Migration name (e.g. InitialCreate)
+        required: true
+        default: InitialCreate
+
+permissions:
+  contents: write
+
+jobs:
+  migration:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet tool install --global dotnet-ef --version "10.*"
+      - name: Create migration
+        env:
+          ConnectionStrings__Default: Host=localhost;Database=design;Username=x;Password=x
+          Jwt__Key: design-time-only-key-0123456789-abcdefghijklmnop
+        run: |
+          dotnet ef migrations add "${{ inputs.name }}" \
+            --project src/SmartSupport.Infrastructure \
+            --startup-project src/SmartSupport.Api \
+            --output-dir Persistence/Migrations
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add src/SmartSupport.Infrastructure/Persistence/Migrations
+          git commit -m "Add EF Core migration: ${{ inputs.name }}"
+          git push
